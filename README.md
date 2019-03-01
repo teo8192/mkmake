@@ -5,7 +5,7 @@ You need a '.targets' file. A line starting with 'target' is the formula for an 
 A line beginning with 'flags' is the flags for compiling.
 A line beginning with 'clean' is custom files when you call 'make clean'
 
-### Example .targets file
+## Example .targets file
 
 ```
 target app main.c common.c

@@ -34,7 +34,7 @@ then
 	fi
 fi
 
-echo -e "# This makefile was generated on $(date) by mkmake.sh\n# See https://github.com/teo8192/SomeScripts.git for more details." > Makefile
+echo -e "# This makefile was generated on $(date) by mkmake.sh\n# See https://github.com/teo8192/mkmake.git for more details." > Makefile
 
 awk '
 /^target/ {
