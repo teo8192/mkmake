@@ -1,5 +1,7 @@
 # mkmake
 
+(You need a POSIX compilant shell to use some commands in the generated makefile)
+
 This script will generate a Makefile for a C project. Not flawless but does the job. 
 You need a '.targets' file. A line starting with 'target' is the formula for an executable. 
 A line beginning with 'flags' is the flags for compiling.
