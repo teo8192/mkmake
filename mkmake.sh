@@ -76,13 +76,13 @@ echo -e ".PHONY: clean\nclean:\n\t@rm -f $objfol/*.o $(awk '
 		printf "%s ", $j
 	}
 }
-' .targets)\n" >> Makefile
+' .targets)\n\t@echo \"cleaned\"\n" >> Makefile
 
-echo -e ".PHONY: dbclean\ndbclean:\n\t@rm -r objs/debug_[0-9a-zA-Z_]*.o $(awk '
+echo -e ".PHONY: dbclean\ndbclean:\n\t@rm -f objs/debug_[0-9a-zA-Z_]*.o $(awk '
 /^target/ {
 	printf "$(DEBUG%s) ", $2
 }
-' .targets)\n" >> Makefile
+' .targets)\n\t@echo \"cleaned debug\"\n" >> Makefile
 
 echo -e "$binfol:\n\t@[[ ! -d "$binfol" ]] && mkdir $binfol\n" >> Makefile
 echo -e "$objfol:\n\t@[[ ! -d "$objfol" ]] && mkdir $objfol\n" >> Makefile
@@ -178,8 +178,8 @@ do
 	fi
 
 	# put it into file
-	echo -e "$object: $i $cdep\n\t\$(CC) -c $i -O2\n\tmv $filename.o $objfol\n" >> Makefile
-	echo -e "$objfol/$debug_object: $i $cdep\n\t\$(CC) -c $i -g -o $debug_object\n\tmv debug_$filename.o $objfol\n" >> Makefile
+	echo -e "$object: $i $cdep\n\t@echo \"compiling $filename.c\"\n\t@\$(CC) -c $i -O2\n\t@mv $filename.o $objfol\n" >> Makefile
+	echo -e "$objfol/$debug_object: $i $cdep\n\t@echo \"compiling $filename.c with debug flag\"\n\t@\$(CC) -c $i -g -o $debug_object\n\t@mv debug_$filename.o $objfol\n" >> Makefile
 done
 
 awk '
@@ -189,7 +189,7 @@ awk '
 	for ( j = 3; j <= NF; ++j ) {
 		printf "objs/%s ", $j
 	}
-	printf "\n\t$(CC) -o $@ "
+	printf "\n\t@echo \"linking %s\"\n\t\n\t@$(CC) -o $@ ", $2
 	for ( j = 3; j <= NF; ++j ) {
 		printf "objs/%s ", $j
 	}
@@ -199,7 +199,7 @@ awk '
 	for ( j = 3; j <= NF; ++j ) {
 		printf "objs/debug_%s ", $j
 	}
-	printf "\n\t$(CC) -o $@ "
+	printf "\n\t@echo \"linking debug_%s\"\n\t@$(CC) -o $@ ", $2
 	for ( j = 3; j <= NF; ++j ) {
 		printf "objs/debug_%s ", $j
 	}
