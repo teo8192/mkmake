@@ -91,7 +91,7 @@ echo -e "$objfol:\n\t@[[ ! -d "$objfol" ]] && mkdir $objfol\n" >> Makefile
 
 # finds header dependencies
 header_dep=""
-for i in `ls *.h`
+for i in `find . -name '*.h' -type f`
 do
 	# use ripgrep and sed to extract dependencies from file
 	# deps="$(rg --color never -o '#include *".*"' $i | sed 's/[0-9]*://g; s/"//g; s/#//g; s/include //g')"
@@ -114,7 +114,7 @@ do
 done
 
 # sourcefile dependencies
-for i in `ls *.c`
+for i in `find . -name '*.c' -type f`
 do
 	# Get filename without extension
 	filename="$(echo $i | sed 's/\.[ch]$//g')"
