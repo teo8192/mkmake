@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # © Teodor Dahl Knusten <teodor@dahlknutsen.no>
 # 
@@ -27,7 +27,7 @@ exists="$(ls Makefile 2> /dev/null)"
 if [ "$exists" == "Makefile" ]
 then
 	echo -e "You already have a Makefile\nDo you want to continue? [y/n]"
-	read answer
+	read -r answer
 	if [ ! "$answer" == "y" ]
 	then
 		exit 1
@@ -36,62 +36,66 @@ fi
 
 echo -e "# This makefile was generated on $(date) by mkmake.sh\n# See https://github.com/teo8192/mkmake.git for more details." > Makefile
 
-awk '
-/^target/ {
-	print "EXECUTABLE" $2 "=bin/" $2 "\n" "DEBUG" $2 "=bin/" $2 "_debug"
-}
-' .targets >> Makefile
-
-echo -e "\nCC=gcc\n" >> Makefile
-echo -e "FLAGS=$(awk '
-/^flags/ {
-	for ( j = 2; j <= NF; ++j ) {
-		printf "%s ", $j
+{
+	awk '
+	/^target/ {
+		print "EXECUTABLE" $2 "=bin/" $2 "\n" "DEBUG" $2 "=bin/" $2 "_debug"
 	}
-}
-' .targets)\n" >> Makefile
+	' .targets
+
+	echo -e "\nCC=gcc\n"
+	echo -e "FLAGS=$(awk '
+	/^flags/ {
+		for ( j = 2; j <= NF; ++j ) {
+			printf "%s ", $j
+		}
+	}
+	' .targets)\n"
+} >> Makefile
 
 objfol="objs"
 binfol="bin"
 
 source_dep=""
 debug_source_dep=""
-echo -e ".PHONY: all\nall: $binfol $objfol $(awk '
-/^target/ {
-	printf "$(EXECUTABLE%s) ", $2
-}
-' .targets)\n" >> Makefile
-
-echo -e ".PHONY: debug\ndebug: $(awk '
-/^target/ {
-	printf "$(DEBUG%s) ", $2
-}
-' .targets)\n" >> Makefile
-echo -e ".PHONY: clean\nclean:\n\t@rm -f $objfol/*.o $(awk '
-/^target/ {
-	printf "$(DEBUG%s) $(EXECUTABLE%s) ", $2, $2
-}
-/^clean/ {
-	for (j = 2; j <= NF; ++j) {
-		printf "%s ", $j
+{
+	echo -e ".PHONY: all\nall: $binfol $objfol $(awk '
+	/^target/ {
+		printf "$(EXECUTABLE%s) ", $2
 	}
-}
-' .targets)\n\t@echo \"cleaned\"\n" >> Makefile
+	' .targets)\n"
 
-echo -e ".PHONY: dbclean\ndbclean:\n\t@rm -f objs/debug_[0-9a-zA-Z_]*.o $(awk '
-/^target/ {
-	printf "$(DEBUG%s) ", $2
-}
-' .targets)\n\t@echo \"cleaned debug\"\n" >> Makefile
+	echo -e ".PHONY: debug\ndebug: $(awk '
+	/^target/ {
+		printf "$(DEBUG%s) ", $2
+	}
+	' .targets)\n"
+	echo -e ".PHONY: clean\nclean:\n\t@rm -f $objfol/*.o $(awk '
+	/^target/ {
+		printf "$(DEBUG%s) $(EXECUTABLE%s) ", $2, $2
+	}
+	/^clean/ {
+		for (j = 2; j <= NF; ++j) {
+			printf "%s ", $j
+		}
+	}
+	' .targets)\n\t@echo \"cleaned\"\n"
 
-echo -e "$binfol:\n\t@[[ ! -d "$binfol" ]] && mkdir $binfol\n" >> Makefile
-echo -e "$objfol:\n\t@[[ ! -d "$objfol" ]] && mkdir $objfol\n" >> Makefile
+	echo -e ".PHONY: dbclean\ndbclean:\n\t@rm -f objs/debug_[0-9a-zA-Z_]*.o $(awk '
+	/^target/ {
+		printf "$(DEBUG%s) ", $2
+	}
+	' .targets)\n\t@echo \"cleaned debug\"\n"
+
+	echo -e "$binfol:\n\t@[[ ! -d $binfol ]] && mkdir $binfol\n"
+	echo -e "$objfol:\n\t@[[ ! -d $objfol ]] && mkdir $objfol\n"
+} >> Makefile
 
 
 
 # finds header dependencies
 header_dep=""
-for i in `find . -name '*.h' -type f`
+for i in $(find . -name '*.h' -type f | sed 's/\.\///')
 do
 	# use ripgrep and sed to extract dependencies from file
 	# deps="$(rg --color never -o '#include *".*"' $i | sed 's/[0-9]*://g; s/"//g; s/#//g; s/include //g')"
@@ -101,9 +105,9 @@ do
 	gsub(/"/, "")
 	print $2
 	}
-	' $i)"
+	' "$i")"
 	# remove newlines
-	deps="$(echo $deps | tr -d '\n')"
+	deps="$(echo "$deps" | tr -d '\n')"
 
 	if [ "$header_dep" == "" ]
 	then
@@ -114,10 +118,10 @@ do
 done
 
 # sourcefile dependencies
-for i in `find . -name '*.c' -type f`
+for i in $(find . -name '*.c' -type f | sed 's/\.\///')
 do
 	# Get filename without extension
-	filename="$(echo $i | sed 's/\.[ch]$//g')"
+	filename="$(echo "$i" | sed 's/\.[ch]$//g')"
 
 	# use awk to extract dependencies from file
 	deps="$(awk '
@@ -125,7 +129,7 @@ do
 	gsub(/"/, "")
 	print $2
 	}
-	' $i)"
+	' "$i")"
 	d=""
 
 	# get dependencies from header files
@@ -142,8 +146,8 @@ do
 	done
 
 	# remove newlines
-	d="$(echo $d | tr -d '\n')"
-	d="$(echo $d | tr -d '\r')"
+	d="$(echo "$d" | tr -d '\n')"
+	d="$(echo "$d" | tr -d '\r')"
 	cdep=""
 
 	# remove duplicate dependencies
